@@ -1,3 +1,4 @@
+localStorage.clear(); // Эта строка удалит старый ноль и заставит игру взять 999,999 из кода
 // --- 1. БАЗА ПРЕДМЕТОВ ---
 const itemsDB = [
     { id: 1, name: "Какулька", image: "💩", rarity: "trash", desc: "Фу, воняет!" },
@@ -24,7 +25,7 @@ const RARITY_COLORS = {
 
 // --- 2. СОСТОЯНИЕ ---
 let playerData = JSON.parse(localStorage.getItem('simChestUser')) || {
-    coins: 50,
+    coins: 999999,
     inventory: [],
     dailyStreak: 0,
     lastDaily: 0
