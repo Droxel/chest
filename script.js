@@ -1,224 +1,173 @@
-// --- БАЗА ДАННЫХ ПРЕДМЕТОВ ---
-// Здесь ты можешь добавлять новые предметы.
-// rarity (редкость): чем выше число, тем реже падает (но пока сделаем просто рандом)
+// --- 1. БАЗА ПРЕДМЕТОВ ---
 const itemsDB = [
-    { id: 1, name: "Камушек", image: "🪨" },
-    { id: 2, name: "Какулька", image: "💩" },
-    { id: 3, name: "Мячик", image: "⚽️" },
-    { id: 4, name: "Листик", image: "🍃" },
-    { id: 5, name: "Кленовый лист", image: "🍁" },
-    { id: 6, name: "Веточка", image: "🪵" },
-    { id: 7, name: "Алмаз", image: "💎" },
-    { id: 8, name: "Сапог", image: "👢" }
+    { id: 1, name: "Какулька", image: "💩", rarity: "trash", desc: "Фу, воняет!" },
+    { id: 2, name: "Огрызок", image: "🍎", rarity: "trash", desc: "Кто-то уже поел." },
+    { id: 3, name: "Рваный носок", image: "🧦", rarity: "trash", desc: "Второй потерялся." },
+    { id: 4, name: "Камень", image: "🪨", rarity: "common", desc: "Просто камень." },
+    { id: 5, name: "Ветка", image: "🪵", rarity: "common", desc: "Палка-копалка." },
+    { id: 6, name: "Хлебушек", image: "🍞", rarity: "common", desc: "Всему голова." },
+    { id: 7, name: "Мячик", image: "⚽", rarity: "rare", desc: "Гол!" },
+    { id: 8, name: "Бургер", image: "🍔", rarity: "rare", desc: "Вкуснятина." },
+    { id: 9, name: "Айфон 5", image: "📱", rarity: "epic", desc: "Почти новый." },
+    { id: 10, name: "Котик", image: "😽", rarity: "epic", desc: "Мур-мяу." },
+    { id: 11, name: "Алмаз", image: "💎", rarity: "legendary", desc: "ТЫ БОГАТ!" },
+    { id: 12, name: "Корона", image: "👑", rarity: "legendary", desc: "Король сундуков." }
 ];
 
-// Настройки ежедневных наград (монеты по дням)
-const dailyRewards = [10, 15, 20, 25, 30, 50, 100];
-
-// --- СОСТОЯНИЕ ИГРОКА (Данные) ---
-// Пытаемся загрузить сохранение, если его нет - создаем новое
-let playerData = JSON.parse(localStorage.getItem('chestSimData')) || {
-    coins: 50, // Стартовые монеты
-    inventory: [], // Список полученных предметов
-    dailyStreak: 0, // День награды
-    lastDailyClaim: 0 // Время последнего сбора награды
+const RARITY_COLORS = {
+    trash: "#747d8c",
+    common: "#a4b0be",
+    rare: "#1e90ff",
+    epic: "#a55eea",
+    legendary: "#ffa502"
 };
 
-// --- ОСНОВНЫЕ ПЕРЕМЕННЫЕ ---
-const COST_TO_OPEN = 5;
-const ROULETTE_ITEM_WIDTH = 100; // Ширина одного квадрата в рулетке (как в CSS)
+// --- 2. СОСТОЯНИЕ ---
+let playerData = JSON.parse(localStorage.getItem('simChestUser')) || {
+    coins: 50,
+    inventory: [],
+    dailyStreak: 0,
+    lastDaily: 0
+};
+const dailyRewards = [10, 15, 20, 30, 50, 100, 500];
 
-// Ссылки на элементы DOM
-const uiCoins = document.getElementById('coin-count');
-const uiInventory = document.getElementById('inventory-grid');
-const uiDailyGrid = document.getElementById('daily-grid');
-const rouletteStrip = document.getElementById('roulette-strip');
-const rouletteWrapper = document.getElementById('roulette-wrapper');
-const modalReward = document.getElementById('modal-reward');
-
-// --- ЗАПУСК ---
-updateUI(); // Обновить все числа и списки при старте
-
-// --- ФУНКЦИИ ---
-
-// 1. Обновление интерфейса
+// --- 3. ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ---
 function updateUI() {
-    uiCoins.innerText = playerData.coins;
-    renderInventory();
+    document.getElementById('coin-count').innerText = playerData.coins;
+    
+    const invGrid = document.getElementById('inventory-grid');
+    invGrid.innerHTML = "";
+    if(playerData.inventory.length === 0) {
+        document.getElementById('empty-inv-msg').style.display = 'block';
+    } else {
+        document.getElementById('empty-inv-msg').style.display = 'none';
+        playerData.inventory.slice().reverse().forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'inv-item';
+            div.style.borderColor = RARITY_COLORS[item.rarity];
+            div.innerHTML = `<div class="inv-img">${item.image}</div><div class="inv-name">${item.name}</div>`;
+            invGrid.appendChild(div);
+        });
+    }
     renderDaily();
-    saveData();
+    localStorage.setItem('simChestUser', JSON.stringify(playerData));
 }
 
-// 2. Сохранение данных в браузере
-function saveData() {
-    localStorage.setItem('chestSimData', JSON.stringify(playerData));
-}
-
-// 3. Переключение экранов
-window.switchScreen = function(screenId) {
-    // Скрываем все экраны
+window.switchScreen = function(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    // Показываем нужный
-    document.getElementById(screenId).classList.add('active');
-};
+    document.getElementById(id).classList.add('active');
+}
 
-// --- ЛОГИКА СУНДУКА ---
-
+// --- 4. ЛОГИКА СУНДУКА ---
 const openBtn = document.getElementById('open-chest-btn');
+const chestVisual = document.getElementById('chest-visual');
+const rouletteWrapper = document.getElementById('roulette-wrapper');
+const rouletteStrip = document.getElementById('roulette-strip');
 
-openBtn.addEventListener('click', () => {
-    if (playerData.coins < COST_TO_OPEN) {
-        alert("Не хватает монет! Забери подарок.");
+openBtn.onclick = function() {
+    if(playerData.coins < 5) {
+        alert("Мало монет!");
         return;
     }
-
-    // Списываем монеты
-    playerData.coins -= COST_TO_OPEN;
+    playerData.coins -= 5;
     updateUI();
-    openBtn.disabled = true; // Блокируем кнопку
-    openBtn.innerText = "КРУТИМ...";
 
-    startRoulette();
-});
+    chestVisual.classList.add('shake');
+    openBtn.disabled = true;
+    openBtn.innerText = "ОТКРЫВАЕМ...";
+
+    setTimeout(() => {
+        chestVisual.classList.remove('shake');
+        chestVisual.style.display = 'none';
+        rouletteWrapper.style.display = 'block';
+        startRoulette();
+    }, 500);
+};
 
 function startRoulette() {
-    rouletteWrapper.style.display = "block"; // Показываем рулетку
-    rouletteStrip.innerHTML = ""; // Очищаем старое
-    rouletteStrip.style.transition = "none";
-    rouletteStrip.style.left = "0px";
+    let pool = [];
+    itemsDB.forEach(item => {
+        let weight = (item.rarity === 'trash') ? 50 : (item.rarity === 'common') ? 30 : (item.rarity === 'rare') ? 15 : (item.rarity === 'epic') ? 5 : 1;
+        for(let i=0; i<weight; i++) pool.push(item);
+    });
 
-    // Генерация ленты рулетки
-    // Мы создадим 30 фейковых предметов, а 31-й будет выигрышный
-    const totalItems = 30;
-    const winnerIndex = 25; // На каком элементе остановится (где-то в конце)
+    const winner = pool[Math.floor(Math.random() * pool.length)];
+    const totalItems = 35;
+    const winnerIndex = 29;
     
-    // Выбираем случайный предмет для выигрыша
-    const winningItem = itemsDB[Math.floor(Math.random() * itemsDB.length)];
-
     let html = "";
-    for (let i = 0; i < totalItems; i++) {
-        let item;
-        if (i === winnerIndex) {
-            item = winningItem;
-        } else {
-            // Случайный мусор для массовки
-            item = itemsDB[Math.floor(Math.random() * itemsDB.length)];
-        }
-        html += `<div class="roulette-item">${item.image}</div>`;
+    for(let i=0; i < totalItems; i++) {
+        let item = (i === winnerIndex) ? winner : pool[Math.floor(Math.random() * pool.length)];
+        html += `<div class="roulette-item bg-${item.rarity}">${item.image}</div>`;
     }
+    
     rouletteStrip.innerHTML = html;
+    rouletteStrip.style.transition = 'none';
+    rouletteStrip.style.left = '0px';
 
-    // ЗАПУСК АНИМАЦИИ
-    // Небольшая задержка, чтобы браузер отрисовал элементы
     setTimeout(() => {
-        // Вычисляем, куда сдвинуть ленту, чтобы winner оказался по центру
-        // Сдвиг = (ширина_элемента * индекс) - (половина_ширина_контейнера) + (половина_ширины_элемента)
-        const containerWidth = 300; // Ширина окна рулетки
-        const targetPos = (winnerIndex * ROULETTE_ITEM_WIDTH) - (containerWidth / 2) + (ROULETTE_ITEM_WIDTH / 2);
-        
-        // CSS Transition для плавного замедления (cubic-bezier делает эффект торможения)
-        rouletteStrip.style.transition = "left 4s cubic-bezier(0.1, 0.9, 0.3, 1)";
+        const itemWidth = 100;
+        const targetPos = (winnerIndex * itemWidth) - (rouletteWrapper.offsetWidth / 2) + (itemWidth / 2);
+        rouletteStrip.style.transition = 'left 4s cubic-bezier(0.1, 0.8, 0.1, 1)';
         rouletteStrip.style.left = `-${targetPos}px`;
 
-        // Когда анимация закончится (через 4 секунды)
-        setTimeout(() => {
-            giveReward(winningItem);
-            openBtn.disabled = false;
-            openBtn.innerHTML = `ОТКРЫТЬ СУНДУК <br><small>(${COST_TO_OPEN} монет)</small>`;
-            // Можно скрыть рулетку обратно, если хочешь, но оставим для красоты
-        }, 4000);
-
+        setTimeout(() => finishSpin(winner), 4000);
     }, 50);
 }
 
-function giveReward(item) {
-    // Добавляем в инвентарь
+function finishSpin(item) {
     playerData.inventory.push(item);
     updateUI();
-
-    // Показываем модалку
+    
     document.getElementById('reward-icon').innerText = item.image;
     document.getElementById('reward-name').innerText = item.name;
-    modalReward.classList.remove('hidden');
+    document.getElementById('reward-desc').innerText = item.desc;
+    
+    const badge = document.getElementById('reward-rarity');
+    badge.innerText = item.rarity.toUpperCase();
+    badge.style.backgroundColor = RARITY_COLORS[item.rarity];
+    
+    document.getElementById('modal-reward').classList.remove('hidden');
+    if(item.rarity === 'epic' || item.rarity === 'legendary') fireConfetti();
+
+    openBtn.disabled = false;
+    openBtn.innerHTML = `ОТКРЫТЬ <br><span class="price-tag">5 🟡</span>`;
 }
 
-// Закрытие модалки
-document.getElementById('close-modal').addEventListener('click', () => {
-    modalReward.classList.add('hidden');
-});
+document.getElementById('claim-btn').onclick = function() {
+    document.getElementById('modal-reward').classList.add('hidden');
+    rouletteWrapper.style.display = 'none';
+    chestVisual.style.display = 'block';
+};
 
-// --- ЛОГИКА ИНВЕНТАРЯ ---
-function renderInventory() {
-    uiInventory.innerHTML = "";
-    // Перебираем инвентарь с конца (чтобы новые были сверху)
-    playerData.inventory.slice().reverse().forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'inv-item';
-        div.innerHTML = `
-            <div class="inv-img">${item.image}</div>
-            <div class="inv-name">${item.name}</div>
-        `;
-        uiInventory.appendChild(div);
-    });
-}
-
-// --- ЛОГИКА ЕЖЕДНЕВНОЙ НАГРАДЫ ---
+// --- 5. ЕЖЕДНЕВКА И КОНФЕТТИ ---
 function renderDaily() {
-    uiDailyGrid.innerHTML = "";
+    const grid = document.getElementById('daily-grid');
+    const timerBox = document.getElementById('timer-box');
+    grid.innerHTML = "";
     const now = Date.now();
-    const oneDayMs = 24 * 60 * 60 * 1000;
-    
-    // Проверяем, прошли ли сутки
-    const timeSinceLast = now - playerData.lastDailyClaim;
-    const canClaim = timeSinceLast >= oneDayMs;
+    const canClaim = (now - playerData.lastDaily) > 86400000;
 
-    // Отображаем 7 дней
-    dailyRewards.forEach((coins, index) => {
-        const div = document.createElement('div');
-        div.className = 'day-card';
-        div.innerHTML = `<div>День ${index + 1}</div><div>${coins}🟡</div>`;
-
-        // Логика стилей
-        if (index < playerData.dailyStreak) {
-            div.classList.add('claimed'); // Уже забрали
-        } else if (index === playerData.dailyStreak) {
-            // Текущий день для сбора
-            if (canClaim) {
-                div.classList.add('active');
-                div.onclick = () => claimDaily(index, coins);
-            } else {
-                // Еще рано
-                div.style.opacity = "0.7";
-                div.innerHTML += "<br><small>Жди...</small>";
-            }
+    dailyRewards.forEach((coins, i) => {
+        const el = document.createElement('div');
+        el.className = 'day-card' + (i < playerData.dailyStreak ? ' claimed' : '') + (i === playerData.dailyStreak && canClaim ? ' active' : '');
+        if(i === playerData.dailyStreak && canClaim) {
+            el.onclick = () => {
+                playerData.coins += coins;
+                playerData.dailyStreak = (playerData.dailyStreak + 1) % 7;
+                playerData.lastDaily = Date.now();
+                fireConfetti();
+                updateUI();
+            };
         }
-        
-        uiDailyGrid.appendChild(div);
+        el.innerHTML = `День ${i+1}<br><b>${coins}</b>`;
+        grid.appendChild(el);
     });
-    
-    // Таймер
-    const timerMsg = document.getElementById('timer-msg');
-    if (!canClaim) {
-        // Сколько осталось ждать
-        const waitTime = oneDayMs - timeSinceLast;
-        const hours = Math.floor(waitTime / (1000 * 60 * 60));
-        const minutes = Math.floor((waitTime % (1000 * 60 * 60)) / (1000 * 60));
-        timerMsg.innerText = `Приходи через ${hours}ч ${minutes}м`;
-    } else {
-        timerMsg.innerText = "Награда доступна!";
-    }
+    timerBox.innerText = canClaim ? "ЗАБИРАЙ!" : "Приходи завтра";
 }
 
-function claimDaily(dayIndex, coins) {
-    playerData.coins += coins;
-    playerData.dailyStreak++;
-    playerData.lastDailyClaim = Date.now();
-    
-    // Если прошли 7 дней, можно сбросить или оставить на 7-м (тут сбрасываем)
-    if (playerData.dailyStreak >= 7) {
-        playerData.dailyStreak = 0;
-    }
-    
-    updateUI();
-    alert(`Ты получил ${coins} монет!`);
+function fireConfetti() {
+    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
 }
+
+updateUI();
