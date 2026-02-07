@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор Сундука</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="currency-container">
+            <span id="coin-count">100</span>
+            <div class="coin-icon">🟡</div>
+        </div>
+    </header>
+
+    <main id="screen-game" class="screen active">
+        <h1>Это сундучки!</h1>
+        
+        <div class="roulette-container" id="roulette-wrapper">
+            <div class="pointer">▼</div>
+            <div class="roulette-strip" id="roulette-strip">
+                </div>
+        </div>
+
+        <button id="open-chest-btn" class="main-btn">ОТКРЫТЬ СУНДУК <br><small>(5 монет)</small></button>
+    </main>
+
+    <main id="screen-inventory" class="screen">
+        <h2>Твой инвентарь</h2>
+        <div class="inventory-grid" id="inventory-grid">
+            </div>
+    </main>
+
+    <main id="screen-leaderboard" class="screen">
+        <div class="leaderboard-msg">
+            <h2>Ты единственный самый лучший лидер!</h2>
+            <p class="small-text">coming soon...</p>
+        </div>
+    </main>
+
+    <main id="screen-daily" class="screen">
+        <h2>Ежедневная награда</h2>
+        <div class="daily-grid" id="daily-grid">
+            </div>
+        <p id="timer-msg"></p>
+    </main>
+
+    <div id="modal-reward" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <h2>Поздравляем!</h2>
+            <div class="reward-display">
+                <div id="reward-icon" class="big-icon"></div>
+                <h3 id="reward-name"></h3>
+            </div>
+            <p>Замечательный дроп!</p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="nav-btn" onclick="switchScreen('screen-inventory')">
+            🎒<br>Портфель
+        </button>
+        <button class="nav-btn" onclick="switchScreen('screen-game')">
+            🏠<br>Сундук
+        </button>
+        <button class="nav-btn" onclick="switchScreen('screen-leaderboard')">
+            🏆<br>Лидеры
+        </button>
+        <button class="nav-btn" onclick="switchScreen('screen-daily')">
+            🎁<br>Подарочек
+        </button>
+    </nav>
+
+    <script src="script.js"></script>
+</body>
+</html>
