@@ -2,93 +2,41 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Симулятор Сундука</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Messenger</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
+    <div class="app-container">
+        <header class="chat-header">
+            <div class="user-info">
+                <div class="avatar">M</div>
+                <div class="details">
+                    <span class="name">Избранное</span>
+                    <span class="status">в сети</span>
+                </div>
+            </div>
+        </header>
 
-
-    <canvas id="confetti-canvas"></canvas>
-
-    <header>
-        <div class="currency-wrapper">
-            <span id="coin-count">0</span>
-            <div class="coin-icon">🟡</div>
-        </div>
-    </header>
-
-    <main id="screen-game" class="screen active">
-        <h1 class="game-title">СУНДУКИ</h1>
-        
-        <div class="roulette-container" id="roulette-wrapper">
-            <div class="pointer">▼</div>
-            <div class="roulette-strip" id="roulette-strip"></div>
+        <div class="chat-area" id="chat-area">
+            <div class="message-date">Сегодня</div>
         </div>
 
-        <div class="chest-visual" id="chest-visual">
-            🎁
-        </div>
-
-        <button id="open-chest-btn" class="main-btn">
-            ОТКРЫТЬ <br>
-            <span class="price-tag">5 🟡</span>
-        </button>
-    </main>
-
-    <main id="screen-inventory" class="screen">
-        <h2>🎒 Твой Хабар</h2>
-        <div class="inventory-grid" id="inventory-grid"></div>
-        <div id="empty-inv-msg" class="empty-msg">Пусто... Иди открывай сундуки!</div>
-    </main>
-
-    <main id="screen-leaderboard" class="screen">
-        <h2>🏆 Лидеры</h2>
-        <div class="leaderboard-list">
-            <div class="leader-row rank-1">
-                <span>#1</span> <span>ТЫ (Пупсик)</span> <span>∞ 🟡</span>
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" id="message-input" placeholder="Написать сообщение..." autocomplete="off">
+                <button id="send-btn" class="send-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 2L11 13"/>
+                        <path d="M22 2L15 22l-4-9-9-4 20-7z"/>
+                    </svg>
+                </button>
             </div>
-            <div class="leader-row">
-                <span>#2</span> <span>Илон Маск</span> <span>300 🟡</span>
-            </div>
-            <div class="leader-row">
-                <span>#3</span> <span>Дуров</span> <span>50 🟡</span>
-            </div>
-        </div>
-    </main>
-
-    <main id="screen-daily" class="screen">
-        <h2>📅 Ежедневная награда</h2>
-        <p class="subtitle">Забирай монетки каждый день!</p>
-        <div class="daily-grid" id="daily-grid"></div>
-        <div id="timer-box" class="timer-box"></div>
-    </main>
-
-    <div id="modal-reward" class="modal hidden">
-        <div class="modal-content">
-            <span class="close-modal" id="close-modal">&times;</span>
-            <h2 id="win-title">УРА!</h2>
-            
-            <div class="reward-card">
-                <div id="reward-icon" class="big-icon"></div>
-                <h3 id="reward-name"></h3>
-                <p id="reward-desc" class="reward-desc"></p>
-                <div id="reward-rarity" class="rarity-badge"></div>
-            </div>
-
-            <button class="claim-btn" id="claim-btn">ЗАБРАТЬ</button>
         </div>
     </div>
 
-    <nav class="bottom-nav">
-        <button class="nav-btn" onclick="switchScreen('screen-inventory')">🎒</button>
-        <button class="nav-btn main-nav-btn" onclick="switchScreen('screen-game')">🎲</button>
-        <button class="nav-btn" onclick="switchScreen('screen-leaderboard')">🏆</button>
-        <button class="nav-btn" onclick="switchScreen('screen-daily')">🎁</button>
-    </nav>
-
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="script.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
