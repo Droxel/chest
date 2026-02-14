@@ -3,39 +3,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.getElementById('send-btn');
     const chatArea = document.getElementById('chat-area');
 
-    // Структура сообщения (на будущее для сервера)
-    // { id: 1, text: "Привет", sender: "me", timestamp: ... }
-    
-    // Функция отправки сообщения
+    // --- ФУНКЦИЯ АВТО-ВЫСОТЫ ---
+    input.addEventListener('input', function() {
+        this.style.height = 'auto'; // Сбрасываем высоту
+        this.style.height = (this.scrollHeight) + 'px'; // Ставим высоту контента
+    });
+
     function sendMessage() {
         const text = input.value.trim();
-        
         if (text !== "") {
             addMessageToUI(text, 'me');
-            input.value = ''; // Очистить поле
-            input.focus();    // Вернуть фокус
+            input.value = ''; 
+            input.style.height = 'auto'; // Сбрасываем высоту после отправки
+            input.focus();
         }
     }
 
-    // Добавление сообщения в DOM
     function addMessageToUI(text, sender) {
-        // Создаем контейнер сообщения
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message', sender);
         
-        // Добавляем двойной клик для реакции
         msgDiv.addEventListener('dblclick', function() {
             this.classList.toggle('liked');
         });
 
-        // Время
         const now = new Date();
         const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
                            now.getMinutes().toString().padStart(2, '0');
 
-        // Собираем HTML
+        // Используем innerHTML только после escapeHtml для безопасности
+        // Replace(/\n/g, '<br>') превращает переносы строк в теги <br>
+        const formattedText = escapeHtml(text).replace(/\n/g, '<br>');
+
         msgDiv.innerHTML = `
-            ${escapeHtml(text)}
+            ${formattedText}
             <span class="time">${timeString}</span>
             <div class="reaction">❤️</div>
         `;
@@ -44,27 +45,25 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
 
-    // Авто-скролл вниз
     function scrollToBottom() {
         chatArea.scrollTop = chatArea.scrollHeight;
     }
 
-    // Защита от XSS (важно для безопасности в будущем)
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    // --- Обработчики событий ---
-
-    // Клик по кнопке
     sendBtn.addEventListener('click', sendMessage);
 
-    // Нажатие Enter
-    input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+    // --- ОБРАБОТКА ENTER ---
+    input.addEventListener('keydown', (e) => {
+        // Если нажат Enter БЕЗ Shift — отправляем
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Запрещаем перенос строки
             sendMessage();
         }
+        // Если нажат Enter + Shift — браузер сам сделает перенос строки
     });
 });

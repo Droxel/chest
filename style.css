@@ -21,7 +21,8 @@ body {
     color: var(--text-primary);
     display: flex;
     justify-content: center;
-    height: 100vh;
+    min-height: 100vh; /* Было height, стало min-height */
+    /* ...остальное без изменений... */
 }
 
 /* Контейнер приложения (мобильный вид на десктопе) */
@@ -124,7 +125,7 @@ body {
     margin-top: 4px;
 }
 
-/* Реакция (сердечко) */
+/* Реакция сердечко */
 .reaction {
     position: absolute;
     bottom: -8px;
@@ -186,7 +187,7 @@ input {
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-    color: var(--text-secondary); /* Цвет из твоего SVG */
+    color: var(--text-secondary); /* Цвет SVG */
 }
 
 .send-btn:hover {
@@ -196,4 +197,88 @@ input {
 
 .send-btn:active {
     transform: scale(0.9);
+}
+/* Добавь это в .message, чтобы текст не вылетал */
+.message {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: var(--border-radius);
+    font-size: 15px;
+    line-height: 1.4;
+    position: relative;
+    animation: fadeIn 0.2s ease-out;
+    cursor: pointer;
+    user-select: none;
+
+    /* ИСПРАВЛЕНИЕ: чтобы длинные слова (ссссссссс) переносились */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Стили для нового поля ввода (textarea) */
+textarea#message-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 15px;
+    outline: none;
+    padding: 10px 0;
+    resize: none; /* Запрещаем ручное изменение размера мышкой */
+    max-height: 150px; /* Лимит расширения вверх */
+    overflow-y: auto; /* Скролл, если текста слишком много */
+    line-height: 1.4;
+    display: block;
+}
+
+/* Скрываем скроллбар у textarea для красоты */
+textarea#message-input::-webkit-scrollbar {
+    width: 0px;
+}
+/* --- МОБИЛЬНАЯ АДАПТАЦИЯ (Добавь в конец style.css) --- */
+
+@media (max-width: 640px) {
+    body {
+        background-color: var(--chat-bg); /* Убираем черные поля по бокам */
+        align-items: flex-start; /* Прижимаем к верху */
+    }
+
+    .app-container {
+        max-width: 100%;
+        width: 100%;
+        height: 100dvh; /* Динамическая высота (важно для мобилок!) */
+        border-radius: 0; /* Убираем скругления углов всего приложения */
+        box-shadow: none;
+    }
+
+    /* Увеличиваем шапку для пальцев */
+    .chat-header {
+        padding: 12px 16px;
+    }
+
+    /* Поле ввода прибиваем к низу плотнее */
+    .input-area {
+        padding: 10px 12px;
+        /* На iPhone поле ввода не должно улетать под "челку" снизу */
+        padding-bottom: max(10px, env(safe-area-inset-bottom)); 
+    }
+
+    .input-wrapper {
+        padding: 8px 8px 8px 16px; /* Чуть крупнее для тапа */
+    }
+
+    /* Убираем синюю подсветку при тапе на Android/iOS */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Скрываем скроллбар, но оставляем скролл (эстетика) */
+    .chat-area::-webkit-scrollbar {
+        width: 4px;
+    }
+    .chat-area::-webkit-scrollbar-thumb {
+        background-color: rgba(255,255,255,0.1);
+        border-radius: 4px;
+    }
 }
